@@ -13,9 +13,6 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by tdunning on 3/27/14.
- */
 public abstract class AbstractMatrixTest {
     abstract Matrix create(Matrix original);
     abstract Matrix create(int rows, int columns);
