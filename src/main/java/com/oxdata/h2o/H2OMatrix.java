@@ -8,15 +8,15 @@ import org.apache.mahout.math.Vector;
 /**
  * Implement a simple matrix type to emulate what an h2o based matrix would need.
  */
-public class ProtoMatrix extends AbstractMatrix {
+public class H2OMatrix extends AbstractMatrix {
   private final double[] values;
 
-  public ProtoMatrix(int rows, int columns) {
+  public H2OMatrix(int rows, int columns) {
     super(rows, columns);
     values = new double[rows * columns];
   }
 
-  public ProtoMatrix(Matrix original) {
+  public H2OMatrix(Matrix original) {
     super(original.rowSize(), original.columnSize());
     int columns = original.columnSize();
     values = new double[original.rowSize() * columns];
@@ -44,7 +44,7 @@ public class ProtoMatrix extends AbstractMatrix {
   }
 
   @Override public double getQuick(int row, int column) { return values[row * columns + column]; }
-  @Override public Matrix like() { return new ProtoMatrix(this); }
-  @Override public Matrix like(int rows, int columns) { return new ProtoMatrix(this.rows, this.columns); }
+  @Override public Matrix like() { return new H2OMatrix(this); }
+  @Override public Matrix like(int rows, int columns) { return new H2OMatrix(this.rows, this.columns); }
   @Override public void setQuick(int row, int column, double value) { values[row * columns + column] = value; }
 }
