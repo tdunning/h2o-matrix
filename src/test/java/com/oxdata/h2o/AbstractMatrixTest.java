@@ -8,12 +8,10 @@ import org.apache.mahout.math.function.Functions;
 import org.apache.mahout.math.function.VectorFunction;
 import org.apache.mahout.math.jet.random.Normal;
 import org.junit.Test;
-
 import java.util.Random;
-
 import static org.junit.Assert.assertEquals;
 
-public abstract class AbstractMatrixTest {
+public abstract class AbstractMatrixTest extends water.TestUtil {
     abstract Matrix create(Matrix original);
     abstract Matrix create(int rows, int columns);
 
