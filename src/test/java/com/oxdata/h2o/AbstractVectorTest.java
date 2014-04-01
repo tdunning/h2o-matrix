@@ -15,7 +15,6 @@ import static org.junit.Assert.assertTrue;
 
 public abstract class AbstractVectorTest extends water.TestUtil {
   abstract Vector create(Vector original);
-  @BeforeClass public static void stall() { stall_till_cloudsize(1); }
 
   @Test
   public void testBasics() {
@@ -48,10 +47,6 @@ public abstract class AbstractVectorTest extends water.TestUtil {
     r.set(31, 0);
 
     assertEquals(r.zSum(), m.zSum() + 5, 1e-13);
-  }
-
-  public AbstractVectorTest() {
-    super();
   }
 
   @Test

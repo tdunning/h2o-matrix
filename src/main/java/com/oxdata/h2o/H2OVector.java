@@ -17,6 +17,9 @@ import water.fvec.Vec.VectorGroup;
 public class H2OVector extends AbstractVector {
   private Vec _vec;
 
+  // Call to clean up H2O storage
+  public void delete() { Vec vec = _vec; _vec = null; water.UKV.remove(vec._key); }
+
   private H2OVector( Vec vec ) { 
     super((int)vec.length()); 
     if( (int)vec.length() != vec.length() )
