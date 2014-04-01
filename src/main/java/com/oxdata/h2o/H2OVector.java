@@ -46,21 +46,21 @@ public class H2OVector extends AbstractVector {
   }
 
   @Override protected Iterator<Element> iterator() {
-    throw H2O.unimpl();
-    //// this is a kind of slow iterator
-    //return new AbstractIterator<Element>() {
-    //  int i = 0;
-    //  @Override protected Element computeNext() {
-    //    if (i >= size()) return endOfData();
-    //    return new Element() {
-    //      int index = i++;
-    //      @Override public double get() { return H2OVector.this.get(index); }
-    //      @Override public int  index() { return index; }
-    //      @Override public void set(double value) { H2OVector.this.values[index] = value; }
-    //    };
-    //  }
-    //
-    //};
+    // this is a kind of slow iterator.
+    // CNC - Speed Hack: return the same Element each time 'round
+    return new Iterator<Element>() {
+      private Chunk _c = _vec.chunkForRow(0);
+      private int _i=-1, _len=(int)_vec.length();
+      private Element _elem = new Element() {
+          private Chunk iter() { return _c._start <= _i && _i < _c._start+_c._len ? _c : (_c = _vec.chunkForRow(_i)); }
+          @Override public double get() { return iter().at(_i-_c._start); }
+          @Override public int  index() { return _i; }
+          @Override public void set(double value) { iter().set(_i-_c._start,value); }
+        };
+      @Override public boolean hasNext() { return _i+1<_len; }
+      @Override public Element next() { _i++; return _elem; }
+      @Override public void remove() { throw H2O.fail(); }
+    };
   }
 
   @Override protected Iterator<Element> iterateNonZero() { return iterator(); }
