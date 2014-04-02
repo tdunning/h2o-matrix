@@ -15,7 +15,7 @@ import water.fvec.Vec.VectorGroup;
  * Shows how to implement a vector type.
  */
 public class H2OVector extends AbstractVector {
-  private Vec _vec;
+  Vec _vec;
 
   // Call to clean up H2O storage
   public void delete() { Vec vec = _vec; _vec = null; water.UKV.remove(vec._key); }

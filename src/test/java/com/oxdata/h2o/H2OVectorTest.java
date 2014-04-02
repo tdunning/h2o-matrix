@@ -6,17 +6,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 public class H2OVectorTest extends AbstractVectorTest {
-  @BeforeClass public static void stall() { stall_till_cloudsize(1); }
-
-  static HashSet<H2OVector> _vecs = new HashSet<H2OVector>();
-  @AfterClass public static void cleanup() {
-    for( H2OVector vec : _vecs )
-      vec.delete();
+  @BeforeClass public static void stall() { 
+    stall_till_cloudsize(1); 
+    water.Scope.enter();
   }
-  
-  @Override Vector create(Vector original) {
-    H2OVector vec = new H2OVector(original);
-    _vecs.add(vec);
-    return vec;
-  }
+  @AfterClass public static void cleanup() { water.Scope.exit(); }
+  @Override Vector create(Vector original) { return new H2OVector(original); }
 }
