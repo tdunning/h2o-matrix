@@ -14,7 +14,7 @@ import water.fvec.*;
  * Implement a simple matrix type to emulate what an h2o based matrix would need.
  */
 public class H2OMatrix extends AbstractMatrix {
-  public/*private*/ Frame _fr;
+  private Frame _fr;
 
   public void delete() { _fr.delete(); }
 
