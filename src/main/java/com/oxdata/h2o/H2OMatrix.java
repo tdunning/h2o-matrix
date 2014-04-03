@@ -1,13 +1,12 @@
 package com.oxdata.h2o;
 
 import org.apache.mahout.math.AbstractMatrix;
+import org.apache.mahout.math.function.DoubleFunction;
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.MatrixSlice;
 import org.apache.mahout.math.Vector;
 
-import water.Futures;
-import water.Key;
-import water.H2O;
+import water.*;
 import water.fvec.*;
 
 /**
@@ -85,5 +84,26 @@ public class H2OMatrix extends AbstractMatrix {
   @Override public double getQuick(int row, int column) { return _fr.vecs()[column].at(row); }
   @Override public Matrix like() { return new H2OMatrix(_fr.deepSlice(null,null)); }
   @Override public Matrix like(int rows, int columns) { return new H2OMatrix(this.rows, this.columns); }
-  @Override public void setQuick(int row, int column, double value) { _fr.vecs()[column].set(row,value); }
+  @Override public void setQuick(int row, int column, double value) { _fr.vecs()[column].set(row,value); _fr.vecs()[column].chunkForRow(row).close(0,null); }
+
+  @Override public Matrix assign( final DoubleFunction f ) {
+    new MRTask2() {
+      @Override public void map( Chunk chks[] ) {
+        for( Chunk c : chks )
+          for( int row=0; row<c._len; row++ )
+            c.set0(row,f.apply(c.at0(row)));
+      }
+    }.doAll(_fr);
+    return this;
+  }
+
+  @Override public Matrix minus( Matrix x ) {
+    if( !(x instanceof H2OMatrix) ) return super.minus(x);
+    new MRTask2() {
+      @Override public void map( Chunk chks[] ) {
+        throw H2O.unimpl();
+      }
+    }.doAll( _fr.add(((H2OMatrix)x)._fr,null) );
+    return this;
+  }
 }
