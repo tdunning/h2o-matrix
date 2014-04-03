@@ -19,7 +19,7 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
     public void testBasicAggregation() {
       try {
         water.Scope.enter();
-        Matrix r = new H2OMatrix(5131, 1031).assign(new Normal(0,1,new Random()));
+        Matrix r = new H2OMatrix(5131, 1031).assign(new H2ONormal(0,1,new Random()));
         Matrix m = create(r);
         compareMatrices(r, m);
         compareMatrices(r, m.like());
@@ -49,7 +49,7 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
   public void testViews() {
     try {
       water.Scope.enter();
-      Matrix r = new H2OMatrix(5131, 1031).assign(new Normal(0,1,new Random()));
+      Matrix r = new H2OMatrix(5131, 1031).assign(new H2ONormal(0,1,new Random()));
       Matrix m = create(r);
       Random gen = new Random();
       for (int i = 0; i < 20; i++) {
@@ -67,7 +67,7 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
   public void testAssign() {
     try {
       water.Scope.enter();
-      Matrix r = new H2OMatrix(5131, 1031).assign(new Normal(0,1,new Random()));
+      Matrix r = new H2OMatrix(5131, 1031).assign(new H2ONormal(0,1,new Random()));
       Matrix m1 = create (r.rowSize(), r.columnSize());
       Matrix m2 = m1.like(r.rowSize(), r.columnSize());
       // This one is going to be slow in H2O - the assignment is the "wrong way"
