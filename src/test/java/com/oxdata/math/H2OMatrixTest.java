@@ -8,7 +8,7 @@ import java.util.HashSet;
 
 public class H2OMatrixTest extends AbstractMatrixTest {
   @BeforeClass public static void stall() { 
-    stall_till_cloudsize(1); 
+    stall_till_cloudsize(2); 
     water.Scope.enter();
   }
   @AfterClass public static void cleanup() { water.Scope.exit(); }

@@ -7,7 +7,7 @@
  '(jde-run-option-debug nil)
  '(jde-run-option-vm-args (quote ("-XX:+PrintGC")))
  '(jde-compile-option-directory "./target/classes")
- '(jde-run-option-application-args (quote ("-beta" "-mainClass" "org.junit.runner.JUnitCore" "com.oxdata.h2o.H2OMatrixTest")))
+ '(jde-run-option-application-args (quote ("-beta" "-mainClass" "org.junit.runner.JUnitCore" "com.oxdata.math.H2OMatrixTest")))
  '(jde-debugger (quote ("JDEbug")))
  '(jde-compile-option-source (quote ("1.6")))
  '(jde-compile-option-classpath (quote ("./target/classes" "./target/test-classes" "../../.m2/repository/org/apache/mahout/mahout-math/0.9/mahout-math-0.9.jar" "../h2o/target/classes" "../h2o/lib/javassist.jar" "../h2o/lib/hadoop/cdh4/hadoop-common.jar" "../h2o/lib/hadoop/cdh4/hadoop-auth.jar" "../h2o/lib/hadoop/cdh4/slf4j-api-1.6.1.jar" "../h2o/lib/hadoop/cdh4/slf4j-nop-1.6.1.jar" "../h2o/lib/hadoop/cdh4/hadoop-hdfs.jar" "../h2o/lib/hadoop/cdh4/protobuf-java-2.4.0a.jar" "../h2o/lib/apache/commons-codec-1.4.jar" "../h2o/lib/apache/commons-configuration-1.6.jar" "../h2o/lib/apache/commons-lang-2.4.jar" "../h2o/lib/apache/commons-logging-1.1.1.jar" "../h2o/lib/apache/httpclient-4.1.1.jar" "../h2o/lib/apache/httpcore-4.1.jar" "../h2o/lib/junit/junit-4.11.jar" "../h2o/lib/apache/guava-12.0.1.jar" "../h2o/lib/gson/gson-2.2.2.jar" "../h2o/lib/poi/poi-3.8-20120326.jar" "../h2o/lib/poi/poi-ooxml-3.8-20120326.jar" "../h2o/lib/poi/poi-ooxml-schemas-3.8-20120326.jar" "../h2o/lib/poi/dom4j-1.6.1.jar" "../h2o/lib/Jama/Jama.jar" "../h2o/lib/s3/aws-java-sdk-1.3.27.jar" "../h2o/lib/log4j/log4j-1.2.15.jar" "../h2o/lib/joda/joda-time-2.3.jar")))

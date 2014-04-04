@@ -3,6 +3,7 @@ package com.oxdata.math;
 import org.apache.mahout.math.*;
 import org.apache.mahout.math.function.DoubleDoubleFunction;
 import org.apache.mahout.math.function.DoubleFunction;
+import org.apache.mahout.math.function.VectorFunction;
 
 import water.*;
 import water.fvec.*;
@@ -65,6 +66,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     return this;
   }
 
+  // Calling this likely indicates a huge performance bug.
   @Override public Matrix assignRow(int row, Vector other) {
     if( other.size() != _fr.numCols() ) 
       throw new IllegalArgumentException("other has "+other.size()+" columns, but this matrix has "+_fr.numCols()+" columns");
@@ -79,34 +81,40 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     return this;
   }
 
+  // Single-element accessors.  Calling these likely indicates a huge performance bug.
   @Override public double getQuick(int row, int column) { return _fr.vecs()[column].at(row); }
+  @Override public void setQuick(int row, int column, double value) { _fr.vecs()[column].set(row,value); _fr.vecs()[column].chunkForRow(row).close(0,null); }
+  // Clone an entire array
   @Override public Matrix like() { return new H2OMatrix(_fr.deepSlice(null,null)); }
   @Override public Matrix like(int rows, int columns) { return new H2OMatrix(this.rows, this.columns); }
-  @Override public void setQuick(int row, int column, double value) { _fr.vecs()[column].set(row,value); _fr.vecs()[column].chunkForRow(row).close(0,null); }
+  // Shared column slice.
+  @Override public Vector viewColumn(int column) { return new H2OVector( _fr.vecs()[column] ); }
 
-  // Normally auto-gened by H2O's Weaver, but must inherit from AbstractMatrix
-  // instead of either Iced or DTask.
-  @Override public AutoBuffer write(AutoBuffer bb) { return bb.put(_fr); }
-  @Override public H2OMatrix read(AutoBuffer bb) { 
-    _fr = bb.get(); 
-    assert rows==-1 && columns==-1; // Set to -1 from private constructor
-    rows = (int) _fr.numRows();     // Now set AbstractMatrix fields from frame
-    columns = _fr.numCols(); 
-    return this; 
+  @Override public double aggregate(DoubleDoubleFunction aggregator, DoubleFunction map) {
+    double res = viewColumn(0).aggregate(aggregator,map);
+    for( int i=0; i<_fr.numCols(); i++ )
+      res = aggregator.apply(res,viewColumn(i).aggregate(aggregator,map));
+    return res;
   }
-  private H2OMatrix() { super(-1,-1); }
-  @Override public H2OMatrix newInstance() { return new H2OMatrix(); }
-  private static int _frozen$type;
-  @Override public int frozenType() {
-    return _frozen$type == 0 ? (_frozen$type=water.TypeMap.onIce(H2OMatrix.class.getName())) : _frozen$type;
-  }
-  @Override public AutoBuffer writeJSONFields(AutoBuffer bb) { return bb; }
-  @Override public water.api.DocGen.FieldDoc[] toDocField() { return null; }
 
+  // Break the data into rows, supply each row to a row-wise aggegrator function
+  @Override public Vector aggregateRows(final VectorFunction f) {
+    if( !(f instanceof H2OVectorFunction) )
+      throw new IllegalArgumentException("H2OMatrix ops only run well with H2O Functions; found "+f.getClass());
+    final H2OVectorFunction f2 = (H2OVectorFunction)f;
+    return new H2OVector(new MRTask2() {
+       @Override public void map( Chunk chks[], NewChunk nc ) {
+         int n = chks[0]._len;
+         H2ORowView h2orv = new H2ORowView(chks);
+         for (int row = 0; row < n; row++)
+           nc.addNum(f2.apply(h2orv.ofRow(row)));
+       }
+     }.doAll(1,_fr).outputFrame(null,null).vecs()[0]);
+  }
+
+  // apply function f to each element in-place
   @Override public Matrix assign( DoubleFunction f ) {
-    if( !(f instanceof H2ODoubleFunction) )
-      throw new IllegalArgumentException("H2OMatrix ops only run well with H2ODoubleFunctions; found "+f.getClass());
-    final H2ODoubleFunction f2 = (H2ODoubleFunction)f;
+    final H2ODoubleFunction f2 = H2ODoubleFunction.map(f);
     new MRTask2() {
       @Override protected void setupLocal() { f2.setupLocal(); }
       @Override public void map( Chunk chks[] ) {
@@ -118,15 +126,14 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     return this;
   }
 
+  // apply function f(x) to each element in-place.  Similar to "this op= x";
   @Override public Matrix assign( Matrix x, DoubleDoubleFunction f ) {
     if( !(x instanceof H2OMatrix) )
       throw new IllegalArgumentException("Mixing H2OMatrix with "+x.getClass());
     final H2OMatrix x2 = (H2OMatrix)x;
     if( _fr.numRows() != x2._fr.numRows() ) throw new CardinalityException((int)_fr.numRows(),(int)x2._fr.numRows());
     if( _fr.numCols() != x2._fr.numCols() ) throw new CardinalityException(     _fr.numCols(),     x2._fr.numCols());
-    if( !(f instanceof H2ODoubleDoubleFunction) )
-      throw new IllegalArgumentException("H2OMatrix ops only run well with H2ODoubleDoubleFunctions; found "+f.getClass());
-    final H2ODoubleDoubleFunction f2 = (H2ODoubleDoubleFunction)f;
+    final H2ODoubleDoubleFunction f2 = H2ODoubleDoubleFunction.map(f);
     new MRTask2() {
       @Override public void map( Chunk chks[] ) {
         int numc = chks.length>>1;
@@ -141,5 +148,29 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     return this;
   }
 
+  // Returns this-x
   @Override public Matrix minus( Matrix x ) { return like().assign(x,H2ODoubleDoubleFunction.MINUS); }
+
+
+  // ---
+  // Normally auto-gened by H2O's Weaver, but must inherit from AbstractMatrix
+  // instead of either Iced or DTask.
+  @Override public AutoBuffer write(AutoBuffer bb) { return bb.put(_fr); }
+  @Override public H2OMatrix read(AutoBuffer bb) { 
+    _fr = bb.get(); 
+    assert rows==-1 && columns==-1; // Set to -1 from private constructor
+    rows = (int) _fr.numRows();     // Now set AbstractMatrix fields from frame
+    columns = _fr.numCols(); 
+    return this; 
+  }
+  public void copyOver( Freezable that ) { _fr = ((H2OMatrix)that)._fr; }
+  public H2OMatrix() { super(-1,-1); }
+  @Override public H2OMatrix newInstance() { return new H2OMatrix(); }
+  private static int _frozen$type;
+  @Override public int frozenType() {
+    return _frozen$type == 0 ? (_frozen$type=water.TypeMap.onIce(H2OMatrix.class.getName())) : _frozen$type;
+  }
+  @Override public AutoBuffer writeJSONFields(AutoBuffer bb) { return bb; }
+  @Override public water.api.DocGen.FieldDoc[] toDocField() { return null; }
+  // ---
 }
