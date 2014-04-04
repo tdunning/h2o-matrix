@@ -1,4 +1,4 @@
-package com.oxdata.h2o;
+package com.oxdata.math;
 
 import java.util.Random;
 import org.apache.mahout.math.DenseVector;

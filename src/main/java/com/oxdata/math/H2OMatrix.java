@@ -1,10 +1,8 @@
-package com.oxdata.h2o;
+package com.oxdata.math;
 
-import org.apache.mahout.math.AbstractMatrix;
+import org.apache.mahout.math.*;
+import org.apache.mahout.math.function.DoubleDoubleFunction;
 import org.apache.mahout.math.function.DoubleFunction;
-import org.apache.mahout.math.Matrix;
-import org.apache.mahout.math.MatrixSlice;
-import org.apache.mahout.math.Vector;
 
 import water.*;
 import water.fvec.*;
@@ -12,7 +10,7 @@ import water.fvec.*;
 /**
  * Implement a simple matrix type to emulate what an h2o based matrix would need.
  */
-public class H2OMatrix extends AbstractMatrix {
+public class H2OMatrix extends AbstractMatrix implements Freezable {
   private Frame _fr;
 
   public void delete() { _fr.delete(); }
@@ -86,24 +84,62 @@ public class H2OMatrix extends AbstractMatrix {
   @Override public Matrix like(int rows, int columns) { return new H2OMatrix(this.rows, this.columns); }
   @Override public void setQuick(int row, int column, double value) { _fr.vecs()[column].set(row,value); _fr.vecs()[column].chunkForRow(row).close(0,null); }
 
-  @Override public Matrix assign( final DoubleFunction f ) {
+  // Normally auto-gened by H2O's Weaver, but must inherit from AbstractMatrix
+  // instead of either Iced or DTask.
+  @Override public AutoBuffer write(AutoBuffer bb) { return bb.put(_fr); }
+  @Override public H2OMatrix read(AutoBuffer bb) { 
+    _fr = bb.get(); 
+    assert rows==-1 && columns==-1; // Set to -1 from private constructor
+    rows = (int) _fr.numRows();     // Now set AbstractMatrix fields from frame
+    columns = _fr.numCols(); 
+    return this; 
+  }
+  private H2OMatrix() { super(-1,-1); }
+  @Override public H2OMatrix newInstance() { return new H2OMatrix(); }
+  private static int _frozen$type;
+  @Override public int frozenType() {
+    return _frozen$type == 0 ? (_frozen$type=water.TypeMap.onIce(H2OMatrix.class.getName())) : _frozen$type;
+  }
+  @Override public AutoBuffer writeJSONFields(AutoBuffer bb) { return bb; }
+  @Override public water.api.DocGen.FieldDoc[] toDocField() { return null; }
+
+  @Override public Matrix assign( DoubleFunction f ) {
+    if( !(f instanceof H2ODoubleFunction) )
+      throw new IllegalArgumentException("H2OMatrix ops only run well with H2ODoubleFunctions; found "+f.getClass());
+    final H2ODoubleFunction f2 = (H2ODoubleFunction)f;
     new MRTask2() {
+      @Override protected void setupLocal() { f2.setupLocal(); }
       @Override public void map( Chunk chks[] ) {
         for( Chunk c : chks )
           for( int row=0; row<c._len; row++ )
-            c.set0(row,f.apply(c.at0(row)));
+            c.set0(row,f2.apply(c.at0(row)));
       }
     }.doAll(_fr);
     return this;
   }
 
-  @Override public Matrix minus( Matrix x ) {
-    if( !(x instanceof H2OMatrix) ) return super.minus(x);
+  @Override public Matrix assign( Matrix x, DoubleDoubleFunction f ) {
+    if( !(x instanceof H2OMatrix) )
+      throw new IllegalArgumentException("Mixing H2OMatrix with "+x.getClass());
+    final H2OMatrix x2 = (H2OMatrix)x;
+    if( _fr.numRows() != x2._fr.numRows() ) throw new CardinalityException((int)_fr.numRows(),(int)x2._fr.numRows());
+    if( _fr.numCols() != x2._fr.numCols() ) throw new CardinalityException(     _fr.numCols(),     x2._fr.numCols());
+    if( !(f instanceof H2ODoubleDoubleFunction) )
+      throw new IllegalArgumentException("H2OMatrix ops only run well with H2ODoubleDoubleFunctions; found "+f.getClass());
+    final H2ODoubleDoubleFunction f2 = (H2ODoubleDoubleFunction)f;
     new MRTask2() {
       @Override public void map( Chunk chks[] ) {
-        throw H2O.unimpl();
+        int numc = chks.length>>1;
+        for( int col = 0; col<numc; col++ ) {
+          Chunk chkl = chks[col     ];
+          Chunk chkr = chks[col+numc];
+          for( int row=0; row<chkl._len; row++ )
+            chkl.set0(row,f2.apply(chkl.at0(row),chkr.at0(row)));
+        }
       }
-    }.doAll( _fr.add(((H2OMatrix)x)._fr,null) );
+    }.doAll( new Frame(_fr).add(x2._fr,true));
     return this;
   }
+
+  @Override public Matrix minus( Matrix x ) { return like().assign(x,H2ODoubleDoubleFunction.MINUS); }
 }

@@ -1,12 +1,10 @@
-package com.oxdata.h2o;
+package com.oxdata.math;
 
-import org.apache.mahout.math.DenseMatrix;
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.MatrixSlice;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.function.Functions;
 import org.apache.mahout.math.function.VectorFunction;
-import org.apache.mahout.math.jet.random.Normal;
 import org.junit.Test;
 import java.util.Random;
 import static org.junit.Assert.assertEquals;

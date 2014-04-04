@@ -1,4 +1,4 @@
-package com.oxdata.h2o;
+package com.oxdata.math;
 
 import java.util.HashSet;
 import org.apache.mahout.math.Vector;
