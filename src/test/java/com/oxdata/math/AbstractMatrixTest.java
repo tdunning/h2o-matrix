@@ -1,12 +1,10 @@
 package com.oxdata.math;
 
 import org.apache.mahout.math.Matrix;
-import org.apache.mahout.math.MatrixSlice;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.function.Functions;
 import org.apache.mahout.math.function.VectorFunction;
 import org.junit.Test;
-import org.junit.BeforeClass;
 import java.util.Random;
 import static org.junit.Assert.assertEquals;
 
@@ -80,6 +78,16 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
       for (int i = 0; i < r.columnSize(); i++)
         m2.assignColumn(i, r.viewColumn(i));
       compareMatrices(r, m2);
+    } finally {
+      water.Scope.exit();
+    }
+  }
+
+  @Test
+  public void testFile() {
+    try {
+      water.Scope.enter();
+      H2OMatrix m = new H2OMatrix(new java.io.File("src/test/java/com/oxdata/data/iris.csv"));
     } finally {
       water.Scope.exit();
     }

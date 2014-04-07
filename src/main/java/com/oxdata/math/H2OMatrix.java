@@ -51,6 +51,9 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
       _fr = new Frame(vecs);
     }
   }
+
+  public H2OMatrix( java.io.File file ) { this(water.TestUtil.parseFrame(null,file)); }
+
   private H2OMatrix( Frame fr ) {
     super((int) fr.numRows(), fr.numCols());
     _fr = fr;
