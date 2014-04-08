@@ -1,12 +1,25 @@
 package com.oxdata.math;
 
-import org.apache.mahout.math.*;
+import org.apache.mahout.math.AbstractMatrix;
+import org.apache.mahout.math.CardinalityException;
+import org.apache.mahout.math.Matrix;
+import org.apache.mahout.math.MatrixSlice;
+import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.function.DoubleDoubleFunction;
 import org.apache.mahout.math.function.DoubleFunction;
 import org.apache.mahout.math.function.VectorFunction;
 
-import water.*;
-import water.fvec.*;
+import water.AutoBuffer;
+import water.Freezable;
+import water.Futures;
+import water.Key;
+import water.MRTask2;
+import water.fvec.AppendableVec;
+import water.fvec.Chunk;
+import water.fvec.Frame;
+import water.fvec.NewChunk;
+import water.fvec.Vec;
+import water.util.FrameUtils;
 
 /**
  * Implement a simple matrix type to emulate what an h2o based matrix would need.
@@ -52,7 +65,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     }
   }
 
-  public H2OMatrix( java.io.File file ) { this(water.TestUtil.parseFrame(null,file)); }
+  public H2OMatrix( java.io.File file ) { this(FrameUtils.parseFrame(null,file)); }
 
   private H2OMatrix( Frame fr ) {
     super((int) fr.numRows(), fr.numCols());
