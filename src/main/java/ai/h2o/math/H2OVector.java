@@ -83,6 +83,10 @@ public class H2OVector extends AbstractVector {
   @Override public double getIteratorAdvanceCost() { return 1; }
   @Override public boolean isAddConstantTime() { return true; }
 
+  public double min() { return _vec.min(); }
+  public double max() { return _vec.max(); }
+  public double mean() { return _vec.mean(); }
+  public double sigma() { return _vec.sigma(); }
 
   @Override public double aggregate(DoubleDoubleFunction aggregator, DoubleFunction map) {
     if( _vec.length() == 0 ) return 0;
