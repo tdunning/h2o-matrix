@@ -1,4 +1,4 @@
-package com.oxdata.math;
+package ai.h2o.math;
 
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;
@@ -87,7 +87,7 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
   public void testFile() {
     try {
       water.Scope.enter();
-      H2OMatrix m = new H2OMatrix(new java.io.File("src/test/java/com/oxdata/data/iris.csv"));
+      H2OMatrix m = new H2OMatrix(new java.io.File("src/test/java/ai/h2o/data/iris.csv"));
     } finally {
       water.Scope.exit();
     }

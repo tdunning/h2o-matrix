@@ -1,6 +1,6 @@
-package com.oxdata.algo;
+package ai.h2o.algo;
 
-import com.oxdata.math.H2OMatrix;
+import ai.h2o.math.H2OMatrix;
 import java.io.File;
 
 public class KMeans {

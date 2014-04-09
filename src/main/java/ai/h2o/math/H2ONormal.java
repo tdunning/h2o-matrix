@@ -1,4 +1,4 @@
-package com.oxdata.math;
+package ai.h2o.math;
 
 /**
  * Implement a distributed RNG generator
