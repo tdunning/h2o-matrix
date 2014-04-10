@@ -105,6 +105,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
   @Override public Matrix like(int rows, int columns) { return new H2OMatrix(this.rows, this.columns); }
   // Shared column slice.
   @Override public Vector viewColumn(int column) { return new H2OColumn( _fr.vecs()[column] ); }
+  @Override public Vector viewRow(int row) { return new H2ORow(this, row); }
 
   @Override public double aggregate(DoubleDoubleFunction aggregator, DoubleFunction map) {
     double res = viewColumn(0).aggregate(aggregator,map);

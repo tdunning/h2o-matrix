@@ -1,18 +1,17 @@
 package ai.h2o.algo;
 
-import ai.h2o.math.H2OMatrix;
-import ai.h2o.math.H2OVector;
+import org.apache.mahout.math.Matrix;
+import org.apache.mahout.math.Vector;
 import java.io.File;
 import java.util.Random;
 import java.util.Arrays;
 
 public class KMeans {
-  H2OMatrix matrix;
+  Matrix matrix;
   Random generator;
 
-  KMeans(File csvfile) {
-    System.out.println("Loading data file: " + csvfile);
-    matrix = new H2OMatrix(csvfile);
+  KMeans(Matrix m) {
+    matrix = m;
 
     generator = new Random((int) (System.currentTimeMillis()));
   }
@@ -39,8 +38,9 @@ public class KMeans {
   }
 
   void fill_row (int row, double[] point) {
-    for (int i = 0; i < matrix.columnSize(); i++)
-      point[i] = matrix.getQuick (row, i);
+    Vector rowvec = matrix.viewRow(row);
+    for (int i = 0; i < rowvec.size(); i++)
+      point[i] = rowvec.getQuick (i);
   }
 
   double calc_sqdist (double[] pointA, double[] pointB) {

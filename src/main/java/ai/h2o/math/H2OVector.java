@@ -3,6 +3,14 @@ package ai.h2o.math;
 import java.util.Iterator;
 import org.apache.mahout.math.*;
 
+/*
+ * H2OVector is an abstract class in front of either H2ORow or H2OColumn.
+ *
+ * H2OColumn is a more "general purpose" vector.
+ *
+ * H2ORow is a convenience class to make a row of a matrix appear like
+ * a virtual Vector.
+ */
 public abstract class H2OVector extends AbstractVector {
   public H2OVector(int size) { super(size); }
 

@@ -10,6 +10,13 @@ import water.*;
 import water.fvec.*;
 import water.fvec.Vec.VectorGroup;
 
+/*
+ * H2ORow is a type of H2OVector which represents a row
+ * in a given matrix.
+ *
+ * H2ORow is always associated with a given matrix/row
+ * and cannot have a standalone existence.
+ */
 public class H2ORow extends H2OVector {
   H2OMatrix _matrix;
   int _row;
@@ -65,19 +72,4 @@ public class H2ORow extends H2OVector {
   @Override public double getQuick(int index) {
     return _matrix.getQuick(_row, index);
   }
-
-  /*
-    protected Matrix matrixLike(int rows, int columns) { return row_or_column.matrixLike(rows, columns); }
-    protected Iterator<Element> iterateNonZero() { return row_or_column.iterateNonZero(); }
-    protected Iterator<Element> iterator() { return row_or_column.iterator(); }
-    public boolean isAddConstantTime() { return true; }
-    public double getLookupCost() { return 2; }
-    public double getIteratorAdvanceCost() { return 1; }
-    public int getNumNondefaultElements() { return row_or_column.getNumNondefaultElements(); }
-    public double getQuick(int index) { return row_or_column.getQuick(index); }
-    public Vector like() { return row_or_column.like(); }
-    public void mergeUpdates(OrderedIntDoubleMapping updates) { row_or_column.mergeUpdates(updates); }
-    public boolean isSequentialAccess() { row_or_column.isSequentialAccess(); }
-    public boolean isDense() { row_or_column.isDense(); }
-    */
 }
