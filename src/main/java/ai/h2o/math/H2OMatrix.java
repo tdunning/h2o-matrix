@@ -77,7 +77,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
   @Override public Matrix assignColumn(int column, Vector other) {
     if( other.size() != _fr.numRows() ) 
       throw new IllegalArgumentException("other has "+other.size()+" rows, but this matrix has "+_fr.numRows()+" rows");
-    H2OVector hvec = other instanceof H2OVector ? (H2OVector)other : new H2OVector(other);
+    H2OColumn hvec = other instanceof H2OColumn ? (H2OColumn)other : new H2OColumn(other);
     _fr.replace(column,hvec._vec);
     return this;
   }
@@ -104,7 +104,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
   @Override public Matrix like() { return new H2OMatrix(_fr.deepSlice(null,null)); }
   @Override public Matrix like(int rows, int columns) { return new H2OMatrix(this.rows, this.columns); }
   // Shared column slice.
-  @Override public Vector viewColumn(int column) { return new H2OVector( _fr.vecs()[column] ); }
+  @Override public Vector viewColumn(int column) { return new H2OColumn( _fr.vecs()[column] ); }
 
   @Override public double aggregate(DoubleDoubleFunction aggregator, DoubleFunction map) {
     double res = viewColumn(0).aggregate(aggregator,map);
@@ -118,7 +118,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     if( !(f instanceof H2OVectorFunction) )
       throw new IllegalArgumentException("H2OMatrix ops only run well with H2O Functions; found "+f.getClass());
     final H2OVectorFunction f2 = (H2OVectorFunction)f;
-    return new H2OVector(new MRTask2() {
+    return new H2OColumn(new MRTask2() {
        @Override public void map( Chunk chks[], NewChunk nc ) {
          int n = chks[0]._len;
          H2ORowView h2orv = new H2ORowView(chks);
