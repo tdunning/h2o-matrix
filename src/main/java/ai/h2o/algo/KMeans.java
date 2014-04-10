@@ -37,21 +37,17 @@ public class KMeans {
       Arrays.fill (centroid, 0.0);
   }
 
-  void fill_row (int row, double[] point) {
-    Vector rowvec = matrix.viewRow(row);
-    for (int i = 0; i < rowvec.size(); i++)
-      point[i] = rowvec.getQuick (i);
-  }
+  double sq(double X) { return X * X; }
 
-  double calc_sqdist (double[] pointA, double[] pointB) {
+  double calc_sqdist (double[] pointA, Vector pointB) {
     double dist = 0;
     for (int i = 0; i < pointA.length; i++)
-      dist += Math.pow(pointA[i] - pointB[i], 2);
+      dist += sq(pointA[i] - pointB.getQuick(i));
 
     return dist;
   }
 
-  int nearest_centroid (double[][] centroids, double[] point) {
+  int nearest_centroid (double[][] centroids, Vector point) {
     int nearest_idx = 0;
     double nearest_dist = 0;
 
@@ -100,7 +96,6 @@ public class KMeans {
     double[][] centroids = new double[K][cols];
     double[][] next_sums = new double[K][cols];
     double[][] next_means = new double[K][cols];
-    double[] point = new double[cols];
 
     random_init (centroids);
 
@@ -111,13 +106,11 @@ public class KMeans {
       System.out.println ("Iteration " + iter);
       print_centroids(centroids);
 
-      for (int r = 0; r < rows; r++) {
-        fill_row (r, point);
-
+      for (Vector point : matrix) {
         int nearest = nearest_centroid (centroids, point);
 
         for (int c = 0; c < cols; c++)
-          next_sums[nearest][c] += point[c];
+          next_sums[nearest][c] += point.getQuick(c);
       }
 
       for (int k = 0; k < K; k++)

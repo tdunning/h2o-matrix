@@ -20,44 +20,36 @@ import water.fvec.Vec.VectorGroup;
 public class H2ORow extends H2OVector {
   H2OMatrix _matrix;
   int _row;
+  double cached[];
+  int _minidx;
+  int _maxidx;
 
   public H2ORow (H2OMatrix matrix, int row) {
     super(matrix.columnSize());
     _matrix = matrix;
     _row = row;
-  }
+    cached = new double[matrix.columnSize()];
 
-  @Override public double minValue() {
-    double min = _matrix.getQuick(_row, 0);
-
-    for (int i = 1; i < _matrix.columnSize(); i++) {
-	    double val = _matrix.getQuick(_row, i);
-	    if (val < min)
-        min = val;
+    for (int i = 0; i < matrix.columnSize(); i++) {
+      double val = _matrix.getQuick(row, i);
+      cached[i] = val;
+      if (cached[i] < cached[_minidx])
+        _minidx = i;
+      if (cached[i] > cached[_maxidx])
+        _maxidx = i;
     }
-
-    return min;
   }
 
-  @Override public double maxValue() {
-    double max = _matrix.getQuick(_row, 0);
-
-    for (int i = 1; i < _matrix.columnSize(); i++) {
-	    double val = _matrix.getQuick(_row, i);
-	    if (val > max)
-        max = val;
-    }
-
-    return max;
-  }
+  @Override public double minValue() { return cached[_minidx]; }
+  @Override public double maxValue() { return cached[_maxidx]; }
 
   @Override protected Iterator<Element> iterator() {
     return new Iterator<Element>() {
       private int _i=-1, _len=(int)_matrix.columnSize();
       private Element _elem = new Element() {
-          @Override public double get() { return _matrix.getQuick(_row, _i); }
+          @Override public double get() { return getQuick(_i); }
           @Override public int index() { return _i; }
-          @Override public void set(double value) { _matrix.setQuick(_row, _i, value); }
+          @Override public void set(double value) { setQuick(_i, value); }
         };
       @Override public boolean hasNext() { return _i+1<_len; }
       @Override public Element next() { _i++; return _elem; }
@@ -67,9 +59,14 @@ public class H2ORow extends H2OVector {
 
   @Override public void setQuick(int index, double value) {
     _matrix.setQuick(_row, index, value);
+    cached[index] = value;
+    if (value < cached[_minidx])
+      _minidx = index;
+    if (value > cached[_maxidx])
+      _maxidx = index;
   }
 
   @Override public double getQuick(int index) {
-    return _matrix.getQuick(_row, index);
+    return cached[index];
   }
 }
