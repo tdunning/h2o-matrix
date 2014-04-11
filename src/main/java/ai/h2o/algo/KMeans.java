@@ -6,6 +6,8 @@ import java.io.File;
 import java.util.Random;
 import java.util.Arrays;
 
+import ai.h2o.math.H2OMatrixTask;
+
 public class KMeans {
   Matrix matrix;
   Random generator;
@@ -90,9 +92,9 @@ public class KMeans {
     }
   }
 
-  public void run(int K) {
-    int cols = matrix.columnSize();
-    int rows = matrix.rowSize();
+  public void run(final int K) {
+    final int cols = matrix.columnSize();
+    final int rows = matrix.rowSize();
     double[][] centroids = new double[K][cols];
     double[][] next_sums = new double[K][cols];
     double[][] next_means = new double[K][cols];
@@ -100,18 +102,40 @@ public class KMeans {
     random_init (centroids);
 
     for (int iter = 0; true; iter++) {
+      final double[][] iter_centroids = centroids;
       zero_init (next_means);
       zero_init (next_sums);
 
       System.out.println ("Iteration " + iter);
       print_centroids(centroids);
 
+      /*
       for (Vector point : matrix) {
         int nearest = nearest_centroid (centroids, point);
 
         for (int c = 0; c < cols; c++)
           next_sums[nearest][c] += point.getQuick(c);
       }
+      */
+
+      next_sums = new H2OMatrixTask<double[][]>() {
+        public double[][] map(Vector point) {
+          int nearest = nearest_centroid (iter_centroids, point);
+          double next_sum[][] = new double[K][cols];
+
+          for (int c = 0; c < cols; c++)
+            next_sum[nearest][c] += point.getQuick(c);
+          return next_sum;
+        }
+
+        public double[][] reduce(double[][] A, double[][] B) {
+          for (int k = 0; k < A.length; k++)
+            for (int c = 0; c < A[k].length; c++)
+              A[k][c] += B[k][c];
+
+          return A;
+        }
+      }.mapreduce(matrix);
 
       for (int k = 0; k < K; k++)
         for (int c = 0; c < cols; c++)

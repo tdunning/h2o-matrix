@@ -25,7 +25,7 @@ import water.util.FrameUtils;
  * Implement a simple matrix type to emulate what an h2o based matrix would need.
  */
 public class H2OMatrix extends AbstractMatrix implements Freezable {
-  private Frame _fr;
+  public Frame _fr;
 
   public void delete() { _fr.delete(); }
 
