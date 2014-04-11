@@ -6,11 +6,13 @@ import java.io.File;
 import java.util.Random;
 import java.util.Arrays;
 
+import ai.h2o.math.H2OMatrix;
 import ai.h2o.math.H2OMatrixTask;
+import water.Iced;
 
-public class KMeans {
-  Matrix matrix;
-  Random generator;
+public class KMeans extends Iced /*only required because the H2OMatrixTask is a NON-static inner class */{
+  transient Matrix matrix;
+  transient Random generator;
 
   KMeans(Matrix m) {
     matrix = m;
@@ -118,24 +120,23 @@ public class KMeans {
       }
       */
 
-      next_sums = new H2OMatrixTask<double[][]>() {
-        public double[][] map(Vector point) {
+      next_sums = new H2OMatrixTask<Crunk>() {
+        public Crunk map(Vector point) {
           int nearest = nearest_centroid (iter_centroids, point);
           double next_sum[][] = new double[K][cols];
-
           for (int c = 0; c < cols; c++)
             next_sum[nearest][c] += point.getQuick(c);
-          return next_sum;
+          return new Crunk(next_sum);
         }
 
-        public double[][] reduce(double[][] A, double[][] B) {
-          for (int k = 0; k < A.length; k++)
-            for (int c = 0; c < A[k].length; c++)
-              A[k][c] += B[k][c];
+        public Crunk reduce(Crunk A, Crunk B) {
+          for (int k = 0; k < A._ds.length; k++)
+            for (int c = 0; c < A._ds[k].length; c++)
+              A._ds[k][c] += B._ds[k][c];
 
           return A;
         }
-      }.mapreduce(matrix);
+      }.mapreduce((H2OMatrix)matrix)._ds;
 
       for (int k = 0; k < K; k++)
         for (int c = 0; c < cols; c++)
@@ -147,4 +148,6 @@ public class KMeans {
       assign(centroids, next_means);
     }
   }
+
+  static private class Crunk extends Iced { public final double _ds[][]; Crunk(double ds[][]) { _ds=ds; }}
 }
