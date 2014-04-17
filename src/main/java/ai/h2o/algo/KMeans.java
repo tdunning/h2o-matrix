@@ -1,153 +1,125 @@
 package ai.h2o.algo;
 
-import org.apache.mahout.math.Matrix;
-import org.apache.mahout.math.Vector;
-import java.io.File;
-import java.util.Random;
-import java.util.Arrays;
-
 import ai.h2o.math.H2OMatrix;
 import ai.h2o.math.H2OMatrixTask;
+import ai.h2o.math.H2ORow;
+import java.io.File;
+import java.util.Arrays;
+import java.util.Random;
+import org.apache.mahout.math.Matrix;
+import org.apache.mahout.math.Vector;
 import water.Iced;
 
 public class KMeans extends Iced /*only required because the H2OMatrixTask is a NON-static inner class */{
-  transient Matrix matrix;
-  transient Random generator;
+  // Stopping criteria: max iterations exceeded
+  private final int MAX_ITER=10;
+  // Stopping criteria: clusters stopped moving
+  private final double TOLERANCE = 0.001;
 
-  KMeans(Matrix m) {
-    matrix = m;
+  transient final Matrix _matrix;
 
-    generator = new Random((int) (System.currentTimeMillis()));
-  }
+  public KMeans(Matrix m) { _matrix = m; }
 
-  void random_init (double[][] centroids) {
-    double[] mins = new double[matrix.columnSize()];
-    double[] maxs = new double[matrix.columnSize()];
+  private void random_init( H2ORows centroids ) {
+    Random R = new Random((int)System.currentTimeMillis());
+    int ndim = _matrix.columnSize();
+    double[] mins = new double[ndim];
+    double[] maxs = new double[ndim];
 
-    for (int c = 0; c < matrix.columnSize(); c++) {
-      mins[c] = matrix.viewColumn(c).minValue();
-      maxs[c] = matrix.viewColumn(c).maxValue();
+    for( int c = 0; c < ndim; c++ ) {
+      mins[c] = _matrix.viewColumn(c).minValue();
+      maxs[c] = _matrix.viewColumn(c).maxValue();
     }
 
-    for (int k = 0; k < centroids.length; k++) {
-      for (int c = 0; c < centroids[0].length; c++) {
-        centroids[k][c] = mins[c] + (generator.nextDouble() * (maxs[c]-mins[c]));
-      }
-    }
+    for( int k = 0; k < centroids._rows.length; k++ )
+      for( int c = 0; c < ndim; c++ )
+        centroids._rows[k].setQuick(c, mins[c] + (maxs[c]-mins[c])*R.nextDouble());
   }
 
-  void zero_init (double[][] centroids) {
-    for (double[] centroid : centroids)
-      Arrays.fill (centroid, 0.0);
-  }
+  private static double sq(double X) { return X * X; }
 
-  double sq(double X) { return X * X; }
-
-  double calc_sqdist (double[] pointA, Vector pointB) {
+  private static double calc_sqdist( H2ORow pointA, Vector pointB ) {
     double dist = 0;
-    for (int i = 0; i < pointA.length; i++)
-      dist += sq(pointA[i] - pointB.getQuick(i));
-
+    int len = pointA.size();
+    for( int i = 0; i < len; i++ )
+      dist += sq(pointA.getQuick(i) - pointB.getQuick(i));
     return dist;
   }
 
-  int nearest_centroid (double[][] centroids, Vector point) {
-    int nearest_idx = 0;
-    double nearest_dist = 0;
+  public KMeans run(final int K) {
+    final int cols = _matrix.columnSize();
+    final int rows = _matrix.rowSize();
+    H2ORows centroids = new H2ORows(K,cols);
+    random_init( centroids );
 
-    for (int i = 0; i < centroids.length; i++) {
-      double dist = calc_sqdist (centroids[i], point);
-
-      if ((i == 0) || (dist < nearest_dist)) {
-        nearest_idx = i;
-        nearest_dist = dist;
-      }
-    }
-
-    return nearest_idx;
-  }
-
-  boolean same (double[][] X, double[][] Y) {
-    for (int i = 0; i < X.length; i++)
-      for (int j = 0; j < X[0].length; j++)
-        if (X[i][j] != Y[i][j])
-          return false;
-    return true;
-  }
-
-  void assign (double[][] X, double[][] Y) {
-    for (int i = 0; i < Y.length; i++)
-      System.arraycopy (Y[i], 0, X[i], 0, Y[i].length);
-  }
-
-  void print_centroids (double[][] centroids) {
-    for (int k = 0; k < centroids.length; k++) {
-      String output = "Centroid " + k + ": [";
-      for (int c = 0; c < centroids[0].length; c++) {
-        if (c > 0)
-          output = output + ", ";
-        output += centroids[k][c];
-      }
-      output += "]";
-
-      System.out.println (output);
-    }
-  }
-
-  public void run(final int K) {
-    final int cols = matrix.columnSize();
-    final int rows = matrix.rowSize();
-    double[][] centroids = new double[K][cols];
-    double[][] next_sums = new double[K][cols];
-    double[][] next_means = new double[K][cols];
-
-    random_init (centroids);
-
-    for (int iter = 0; true; iter++) {
-      final double[][] iter_centroids = centroids;
-      zero_init (next_means);
-      zero_init (next_sums);
-
+    for( int iter = 0; iter < MAX_ITER; iter++ ) {
       System.out.println ("Iteration " + iter);
-      print_centroids(centroids);
+      System.out.println(centroids);
+      final H2ORows centroids2 = centroids;
 
-      /*
-      for (Vector point : matrix) {
-        int nearest = nearest_centroid (centroids, point);
-
-        for (int c = 0; c < cols; c++)
-          next_sums[nearest][c] += point.getQuick(c);
-      }
-      */
-
-      next_sums = new H2OMatrixTask<Crunk>() {
-        public Crunk map(Vector point) {
-          int nearest = nearest_centroid (iter_centroids, point);
-          double next_sum[][] = new double[K][cols];
-          for (int c = 0; c < cols; c++)
-            next_sum[nearest][c] += point.getQuick(c);
-          return new Crunk(next_sum);
+      H2ORows next = new H2OMatrixTask<H2ORows>() {
+        @Override public H2ORows map(Vector point, H2ORows tmp) {
+          int nearest = centroids2.nearest(point);
+          if( tmp == null ) tmp = new H2ORows(K, cols);
+          tmp._rows[nearest].plus(point);
+          return tmp;
         }
 
-        public Crunk reduce(Crunk A, Crunk B) {
-          for (int k = 0; k < A._ds.length; k++)
-            for (int c = 0; c < A._ds[k].length; c++)
-              A._ds[k][c] += B._ds[k][c];
+        @Override public void reduce(H2ORows A, H2ORows B) { A.plus(B); }
+      }.mapreduce((H2OMatrix)_matrix);
 
-          return A;
-        }
-      }.mapreduce((H2OMatrix)matrix)._ds;
+      next.divide(rows);
 
-      for (int k = 0; k < K; k++)
-        for (int c = 0; c < cols; c++)
-          next_means[k][c] = next_sums[k][c]/rows;
-
-      if (same (centroids, next_means))
+      // Stopping criteria scales by dimensions.
+      if( !centroids.distance_exceeds(next, TOLERANCE * cols) )
         break;
-
-      assign(centroids, next_means);
+      centroids = next;
     }
+    return this;
   }
 
-  static private class Crunk extends Iced { public final double _ds[][]; Crunk(double ds[][]) { _ds=ds; }}
+  // A collection of H2ORows; very nearly a Matrix
+  private static class H2ORows extends Iced {
+    final H2ORow[] _rows;
+    H2ORows(int K, int cols) {
+      _rows = new H2ORow[K];
+      for( int i=0; i<K; i++ )
+        _rows[i] = new H2ORow(cols);
+    }
+
+    // Index of nearest row to this point (smallest Euclidean distance)
+    int nearest( Vector point ) {
+      int nearest_idx = 0;
+      double nearest_dist = calc_sqdist(_rows[nearest_idx], point);
+      for( int i = 1; i < _rows.length; i++ ) {
+        double dist = calc_sqdist(_rows[i], point);
+        if( dist < nearest_dist ) {
+          nearest_idx = i;
+          nearest_dist = dist;
+        }
+      }
+      return nearest_idx;
+    }
+
+    // TRUE if the Euclidean distance between two H2ORows exceeds tolerance
+    boolean distance_exceeds( H2ORows rs, double tol ) {
+      double err=0;
+      for( int i = 0; i < _rows.length; i++ ) {
+        err += calc_sqdist(_rows[i],rs._rows[i]);
+        if( err > tol ) return false; // Early-out check
+      }
+      return true;
+    }
+
+
+    void plus( H2ORows rows ) { for( int i=0; i<_rows.length; i++ ) _rows[i].plus(rows._rows[i]); }
+    void divide( double d )   { for( int i=0; i<_rows.length; i++ ) _rows[i].divide(d); }
+
+    @Override public String toString() {
+      StringBuilder sb = new StringBuilder();
+      for( int k = 0; k < _rows.length; k++ )
+        sb.append("Centroid ").append(k).append(": ").append(_rows[k]).append("\n");
+      return sb.toString();
+    }
+  }
 }

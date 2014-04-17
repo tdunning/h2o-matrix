@@ -27,8 +27,6 @@ import water.util.FrameUtils;
 public class H2OMatrix extends AbstractMatrix implements Freezable {
   public Frame _fr;
 
-  public void delete() { _fr.delete(); }
-
   public H2OMatrix(int rows, int columns) {
     super(rows, columns);
     Vec[] vecs = new Vec[columns];

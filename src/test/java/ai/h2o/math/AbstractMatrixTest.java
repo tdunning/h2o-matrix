@@ -1,5 +1,6 @@
 package ai.h2o.math;
 
+import ai.h2o.algo.KMeans;
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.function.Functions;
@@ -88,6 +89,8 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
     try {
       water.Scope.enter();
       H2OMatrix m = new H2OMatrix(new java.io.File("src/test/java/ai/h2o/data/iris.csv"));
+      KMeans kmeans = new KMeans(m).run(3);
+      System.out.println(kmeans);
     } finally {
       water.Scope.exit();
     }

@@ -16,9 +16,6 @@ import water.fvec.Vec.VectorGroup;
 public class H2OColumn extends H2OVector {
   Vec _vec;
 
-  // Call to clean up H2O storage
-  public void delete() { Vec vec = _vec; _vec = null; water.UKV.remove(vec._key); }
-
   H2OColumn( Vec vec ) {
     super((int)vec.length());
     if( (int)vec.length() != vec.length() )
