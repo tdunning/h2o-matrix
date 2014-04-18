@@ -2,8 +2,10 @@ package ai.h2o.math;
 
 import java.util.Arrays;
 import java.util.Iterator;
-
 import org.apache.mahout.math.Vector;
+import org.apache.mahout.math.function.DoubleDoubleFunction;
+import org.apache.mahout.math.function.DoubleFunction;
+import org.apache.mahout.math.function.Functions;
 import water.*;
 
 /*
@@ -88,11 +90,23 @@ public class H2ORow extends H2OVector implements Freezable {
     return this;
   }
 
-  @Override public Vector plus( Vector that ) {
-    if( _matrix != null ) return super.plus(that);
+  @Override public Vector assign( DoubleFunction f ) {
+    if( _matrix != null ) return super.assign(f);
+    _min = _max = Double.NaN;   // Reset cache
     for( int i=0; i<_cached.length; i++ )
-      _cached[i] += that.getQuick(i);
-    _min = _max = Double.NaN;
+      _cached[i] = f.apply(_cached[i]);
+    return this;
+  }
+
+  @Override public Vector assign( Vector that, DoubleDoubleFunction f ) {
+    if( _matrix != null ) return super.assign(that,f);
+    _min = _max = Double.NaN;   // Reset cache
+    if( f == Functions.PLUS ) {
+      for( int i=0; i<_cached.length; i++ )
+        _cached[i] += that.getQuick(i);
+    } else {
+      return super.assign(that,f);
+    }
     return this;
   }
 

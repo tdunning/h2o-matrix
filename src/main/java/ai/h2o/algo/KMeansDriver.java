@@ -1,6 +1,5 @@
 package ai.h2o.algo;
 
-import ai.h2o.algo.KMeans;
 import ai.h2o.math.H2OMatrix;
 import java.io.File;
 import water.H2O;

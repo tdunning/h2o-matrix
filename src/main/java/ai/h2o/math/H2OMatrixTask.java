@@ -4,7 +4,6 @@ import water.Iced;
 import water.MRTask2;
 import water.fvec.Chunk;
 import org.apache.mahout.math.Vector;
-import org.apache.mahout.math.Matrix;
 
 public abstract class H2OMatrixTask<MType extends Iced> extends MRTask2<H2OMatrixTask<MType>> {
   public abstract MType map(Vector v, MType tmp);
