@@ -114,13 +114,14 @@ public class H2ORow extends H2OVector implements Freezable {
   // Normally auto-gened by H2O's Weaver, but must inherit from AbstractMatrix
   // instead of either Iced or DTask.
   @Override public AutoBuffer write(AutoBuffer bb) { return bb.put(_matrix).put4(_row).putA8d(_cached); }
-  @Override public H2ORow read(AutoBuffer bb) { 
+  @Override public H2ORow read(AutoBuffer bb) {
     _matrix = bb.get(H2OMatrix.class);
     _row = bb.get4();
     _cached = bb.getA8d();
     _min = _max = Double.NaN;
-    return this; 
+    return this;
   }
+  public H2ORow(){super(0);}
   public void copyOver( Freezable that ) { 
     H2ORow row = (H2ORow)that;
     _matrix = row._matrix;

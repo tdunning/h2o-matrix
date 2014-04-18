@@ -49,12 +49,11 @@ public class KMeans extends Iced /*only required because the H2OMatrixTask is a 
 
   public KMeans run(final int K) {
     final int cols = _matrix.columnSize();
-    final int rows = _matrix.rowSize();
     H2ORows centroids = new H2ORows(K,cols);
     random_init( centroids );
 
     for( int iter = 0; iter < MAX_ITER; iter++ ) {
-      System.out.println ("Iteration " + iter);
+      System.out.println("Iteration " + iter);
       System.out.println(centroids);
       final H2ORows centroids2 = centroids;
 
@@ -65,7 +64,6 @@ public class KMeans extends Iced /*only required because the H2OMatrixTask is a 
           tmp.addPoint(nearest,point);
           return tmp;
         }
-
         @Override public void reduce(H2ORows A, H2ORows B) { A.reduce(B); }
       }.mapreduce((H2OMatrix)_matrix);
 
@@ -140,7 +138,7 @@ public class KMeans extends Iced /*only required because the H2OMatrixTask is a 
         _rows[i].assign(Functions.mult(1.0/_members[i]));
     }
 
-    // 
+    // For clusters with no members, inject a random row
     void fixupEmptyClusters(Matrix m) {
       for( int i=0; i<_rows.length; i++ )
         if( _members[i]==0 ) {
