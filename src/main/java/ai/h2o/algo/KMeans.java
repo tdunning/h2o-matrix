@@ -1,8 +1,6 @@
 package ai.h2o.algo;
 
-import ai.h2o.math.H2OMatrix;
-import ai.h2o.math.H2OMatrixTask;
-import ai.h2o.math.H2ORow;
+import ai.h2o.math.*;
 import java.util.Random;
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;

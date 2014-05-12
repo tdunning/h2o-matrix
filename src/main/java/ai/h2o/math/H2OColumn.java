@@ -68,6 +68,8 @@ public class H2OColumn extends H2OVector {
 
   @Override public double minValue() { return _vec.min(); }
   @Override public double maxValue() { return _vec.max(); }
+  public double mean () { return _vec.mean (); }
+  public double sigma() { return _vec.sigma(); }
 
   @Override public double aggregate(DoubleDoubleFunction aggregator, DoubleFunction map) {
     if( _vec.length() == 0 ) return 0;
