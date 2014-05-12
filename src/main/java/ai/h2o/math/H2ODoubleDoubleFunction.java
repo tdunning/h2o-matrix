@@ -33,12 +33,14 @@ public abstract class H2ODoubleDoubleFunction extends DoubleDoubleFunction imple
   // instead of either Iced or DTask.
   @Override public AutoBuffer write(AutoBuffer bb) { return bb; }
   @Override public Freezable read(AutoBuffer bb) { return this; }
+  @Override public AutoBuffer write_impl(AutoBuffer bb) { return bb; }
+  @Override public Freezable read_impl(AutoBuffer bb) { return this; }
+  @Override public AutoBuffer writeJSON(AutoBuffer bb) { return bb; }
+  @Override public Freezable readJSON(AutoBuffer bb) { return this; }
   public void copyOver(Freezable that) { }
-  @Override public Freezable newInstance() { throw H2O.fail(); }
+  @Override public H2ODoubleDoubleFunction clone() { return this; }
   private static int _frozen$type;
   @Override public int frozenType() {
     return _frozen$type == 0 ? (_frozen$type=water.TypeMap.onIce(H2ODoubleDoubleFunction.class.getName())) : _frozen$type;
   }
-  @Override public AutoBuffer writeJSONFields(AutoBuffer bb) { return bb; }
-  @Override public water.api.DocGen.FieldDoc[] toDocField() { return null; }
 }

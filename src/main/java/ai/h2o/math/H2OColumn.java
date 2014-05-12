@@ -31,7 +31,7 @@ public class H2OColumn extends H2OVector {
   public H2OColumn(Vector r) {
     super(r.size());
     if( r instanceof H2OColumn ) {
-      _vec = new Frame(((H2OColumn)r)._vec).deepSlice(null,null).vecs()[0];
+      _vec = new Frame(((H2OColumn)r)._vec).deepcopy().vecs()[0];
     } else {
       AppendableVec av = new AppendableVec(VectorGroup.VG_LEN1.addVec());
       NewChunk nc = new NewChunk(av,0);
@@ -92,7 +92,7 @@ public class H2OColumn extends H2OVector {
     // Parallel/distributed aggregate call
     return new Aggregate(H2ODoubleDoubleFunction.map(aggregator),H2ODoubleFunction.map(map)).doAll(_vec)._res;
   }
-  private static class Aggregate extends MRTask2<Aggregate> {
+  private static class Aggregate extends MRTask<Aggregate> {
     final H2ODoubleDoubleFunction _reducer;
     final H2ODoubleFunction _mapper;
     Aggregate( H2ODoubleDoubleFunction reducer, H2ODoubleFunction mapper ) { _reducer = reducer; _mapper = mapper; }

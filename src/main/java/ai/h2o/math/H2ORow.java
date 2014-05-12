@@ -121,21 +121,15 @@ public class H2ORow extends H2OVector implements Freezable {
     _min = _max = Double.NaN;
     return this;
   }
+  @Override public AutoBuffer write_impl(AutoBuffer bb) { return write(bb); }
+  @Override public H2ORow read_impl(AutoBuffer bb) { return read(bb); }
+  @Override public AutoBuffer writeJSON(AutoBuffer bb) { return bb; }
+  @Override public H2ORow readJSON(AutoBuffer bb) { return this; }
+  @Override public H2ORow clone() { return new H2ORow(_matrix, _row); }
   public H2ORow(){super(0);}
-  public void copyOver( Freezable that ) { 
-    H2ORow row = (H2ORow)that;
-    _matrix = row._matrix;
-    _row = row._row;
-    _cached = row._cached;
-    _min = row._min;
-    _max = row._max;
-  }
-  @Override public H2ORow newInstance() { return new H2ORow(0); }
   private static int _frozen$type;
   @Override public int frozenType() {
     return _frozen$type == 0 ? (_frozen$type=water.TypeMap.onIce(H2ORow.class.getName())) : _frozen$type;
   }
-  @Override public AutoBuffer writeJSONFields(AutoBuffer bb) { return bb; }
-  @Override public water.api.DocGen.FieldDoc[] toDocField() { return null; }
   // ---
 }

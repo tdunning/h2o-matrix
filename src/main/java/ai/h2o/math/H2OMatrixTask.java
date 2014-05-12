@@ -1,11 +1,11 @@
 package ai.h2o.math;
 
 import water.Iced;
-import water.MRTask2;
+import water.MRTask;
 import water.fvec.Chunk;
 import org.apache.mahout.math.Vector;
 
-public abstract class H2OMatrixTask<MType extends Iced> extends MRTask2<H2OMatrixTask<MType>> {
+public abstract class H2OMatrixTask<MType extends Iced> extends MRTask<H2OMatrixTask<MType>> {
   public abstract MType map(Vector v, MType tmp);
   public abstract void reduce(MType a, MType b);
   MType _res;

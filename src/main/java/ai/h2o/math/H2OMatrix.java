@@ -13,7 +13,7 @@ import water.AutoBuffer;
 import water.Freezable;
 import water.Futures;
 import water.Key;
-import water.MRTask2;
+import water.MRTask;
 import water.fvec.AppendableVec;
 import water.fvec.Chunk;
 import water.fvec.Frame;
@@ -38,7 +38,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
   public H2OMatrix(Matrix original) {
     super(original.rowSize(), original.columnSize());
     if( original instanceof H2OMatrix ) {
-      _fr = ((H2OMatrix)original)._fr.deepSlice(null,null);
+      _fr = ((H2OMatrix)original)._fr.deepcopy();
     } else{
       int columns = original.columnSize();
       Key keys[] = Vec.VectorGroup.VG_LEN1.addVecs(columns);
@@ -89,7 +89,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     for( int i=0; i<vecs.length; i++ ) {
       vecs[i].set(row,other.getQuick(i));
       vecs[i].chunkForRow(row).close(0,fs);
-      vecs[i].postWrite();
+      vecs[i].postWrite(fs);
     }
     fs.blockForPending();
     return this;
@@ -99,7 +99,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
   @Override public double getQuick(int row, int column) { return _fr.vecs()[column].at(row); }
   @Override public void setQuick(int row, int column, double value) { _fr.vecs()[column].set(row,value); _fr.vecs()[column].chunkForRow(row).close(0,null); }
   // Clone an entire array
-  @Override public Matrix like() { return new H2OMatrix(_fr.deepSlice(null,null)); }
+  @Override public Matrix like() { return new H2OMatrix(_fr.deepcopy()); }
   @Override public Matrix like(int rows, int columns) { return new H2OMatrix(this.rows, this.columns); }
   // Shared column slice.
   @Override public Vector viewColumn(int column) { return new H2OColumn( _fr.vecs()[column] ); }
@@ -117,7 +117,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     if( !(f instanceof H2OVectorFunction) )
       throw new IllegalArgumentException("H2OMatrix ops only run well with H2O Functions; found "+f.getClass());
     final H2OVectorFunction f2 = (H2OVectorFunction)f;
-    return new H2OColumn(new MRTask2() {
+    return new H2OColumn(new MRTask() {
        @Override public void map( Chunk chks[], NewChunk nc ) {
          int n = chks[0]._len;
          H2ORowView h2orv = new H2ORowView(chks);
@@ -130,7 +130,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
   // apply function f to each element in-place
   @Override public Matrix assign( DoubleFunction f ) {
     final H2ODoubleFunction f2 = H2ODoubleFunction.map(f);
-    new MRTask2() {
+    new MRTask() {
       @Override protected void setupLocal() { f2.setupLocal(); }
       @Override public void map( Chunk chks[] ) {
         for( Chunk c : chks )
@@ -149,7 +149,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     if( _fr.numRows() != x2._fr.numRows() ) throw new CardinalityException((int)_fr.numRows(),(int)x2._fr.numRows());
     if( _fr.numCols() != x2._fr.numCols() ) throw new CardinalityException(     _fr.numCols(),     x2._fr.numCols());
     final H2ODoubleDoubleFunction f2 = H2ODoubleDoubleFunction.map(f);
-    new MRTask2() {
+    new MRTask() {
       @Override public void map( Chunk chks[] ) {
         int numc = chks.length>>1;
         for( int col = 0; col<numc; col++ ) {
@@ -159,7 +159,7 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
             chkl.set0(row,f2.apply(chkl.at0(row),chkr.at0(row)));
         }
       }
-    }.doAll( new Frame(_fr).add(x2._fr,true));
+    }.doAll( new Frame(_fr).add(x2._fr));
     return this;
   }
 
@@ -178,14 +178,23 @@ public class H2OMatrix extends AbstractMatrix implements Freezable {
     columns = _fr.numCols(); 
     return this; 
   }
-  public void copyOver( Freezable that ) { _fr = ((H2OMatrix)that)._fr; }
+  @Override public H2OMatrix readJSON(AutoBuffer bb) {
+    return this;
+  }
+  @Override public AutoBuffer writeJSON(AutoBuffer bb) {
+    return bb;
+  }
+  @Override public H2OMatrix read_impl(AutoBuffer bb) {
+    return read(bb);
+  }
+  @Override public AutoBuffer write_impl(AutoBuffer bb) {
+    return write(bb);
+  }
+  @Override public H2OMatrix clone() { return (H2OMatrix) this.like(); }
   public H2OMatrix() { super(-1,-1); }
-  @Override public H2OMatrix newInstance() { return new H2OMatrix(); }
   private static int _frozen$type;
   @Override public int frozenType() {
     return _frozen$type == 0 ? (_frozen$type=water.TypeMap.onIce(H2OMatrix.class.getName())) : _frozen$type;
   }
-  @Override public AutoBuffer writeJSONFields(AutoBuffer bb) { return bb; }
-  @Override public water.api.DocGen.FieldDoc[] toDocField() { return null; }
   // ---
 }

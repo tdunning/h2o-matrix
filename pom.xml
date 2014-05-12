@@ -78,7 +78,8 @@
           <artifactId>h2o-core</artifactId>
           <groupId>ai.h2o</groupId>
           <version>2.5-SNAPSHOT</version>
-          <scope>compile</scope>
+          <scope>system</scope>
+        <systemPath>/Users/avati/work/h2o2/h2o-core/build/h2o-core.jar</systemPath>
         </dependency>
         <dependency>
           <artifactId>h2o-core</artifactId>
