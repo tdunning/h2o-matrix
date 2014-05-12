@@ -146,7 +146,7 @@ public class KMeans extends Iced /*only required because the H2OMatrixTask is a 
         }
     }
 
-    void reduce(H2ORows B) { assign(B,Functions.PLUS); water.util.Utils.add(_members,B._members); }
+    void reduce(H2ORows B) { assign(B,Functions.PLUS); water.util.ArrayUtils.add(_members,B._members); }
 
     @Override public String toString() {
       StringBuilder sb = new StringBuilder();

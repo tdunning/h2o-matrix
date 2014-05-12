@@ -6,6 +6,8 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.function.Functions;
 import org.apache.mahout.math.function.VectorFunction;
 import org.junit.Test;
+
+import java.io.IOException;
 import java.util.Random;
 import static org.junit.Assert.assertEquals;
 
@@ -17,13 +19,13 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
   @Test
   public void testBasicAggregation() {
     try {
-      water.Scope.enter();
+      Scope.enter();
       Matrix r = new H2OMatrix(5131, 1031).assign(new H2ONormal(0,1,new Random()));
       Matrix m = create(r);
       compareMatrices(r, m);
       compareMatrices(r, m.like());
     } finally {
-      water.Scope.exit();
+      Scope.exit();
     }
   }
 
@@ -50,7 +52,7 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
   @Test
   public void testViews() {
     try {
-      water.Scope.enter();
+      Scope.enter();
       Matrix r = new H2OMatrix(5131, 1031).assign(new H2ONormal(0,1,new Random()));
       Matrix m = create(r);
       Random gen = new Random();
@@ -61,14 +63,14 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
         assertEquals(r.viewColumn(column ).zSum(), m.viewColumn(column ).zSum(), 0);
       }
     } finally {
-      water.Scope.exit();
+      Scope.exit();
     }
   }
 
   @Test
   public void testAssign() {
     try {
-      water.Scope.enter();
+      Scope.enter();
       Matrix r = new H2OMatrix(5131, 1031).assign(new H2ONormal(0,1,new Random()));
       Matrix m1 = create (r.rowSize(), r.columnSize());
       Matrix m2 = m1.like(r.rowSize(), r.columnSize());
@@ -80,19 +82,19 @@ public abstract class AbstractMatrixTest extends water.TestUtil {
         m2.assignColumn(i, r.viewColumn(i));
       compareMatrices(r, m2);
     } finally {
-      water.Scope.exit();
+      Scope.exit();
     }
   }
 
   @Test
-  public void testFile() {
+  public void testFile() throws IOException {
     try {
-      water.Scope.enter();
+      Scope.enter();
       H2OMatrix m = new H2OMatrix(new java.io.File("src/test/java/ai/h2o/data/iris.csv"));
       KMeans kmeans = new KMeans(m).run(3);
       System.out.println(kmeans);
     } finally {
-      water.Scope.exit();
+      Scope.exit();
     }
   }
 }

@@ -8,8 +8,8 @@ import org.junit.BeforeClass;
 public class H2OColumnTest extends AbstractVectorTest {
   @BeforeClass public static void stall() { 
     stall_till_cloudsize(1); 
-    water.Scope.enter();
+    Scope.enter();
   }
-  @AfterClass public static void cleanup() { water.Scope.exit(); }
+  @AfterClass public static void cleanup() { Scope.exit(); }
   @Override Vector create(Vector original) { return new H2OColumn(original); }
 }
